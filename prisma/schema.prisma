@@ -11,7 +11,8 @@ datasource db {
 }
 
 model Google_Keep {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-  title String
-  note String
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  note      String
+  createdAt DateTime @default(now())
 }

@@ -4,6 +4,7 @@ import { Textarea, useDisclosure } from "@chakra-ui/react";
 import { DragHandleIcon } from "@chakra-ui/icons";
 import { useToast } from "@chakra-ui/react";
 import { useState } from "react";
+import Notes from "./components/Notes";
 import {
   Button,
   Modal,
@@ -21,13 +22,16 @@ import {
   Center,
   Icon,
 } from "@chakra-ui/react";
-
+import useSWR, { useSWRConfig } from "swr";
 export default function Page() {
+  const { mutate } = useSWRConfig()
+  const [is_Loading, setLoading] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const initialRef = React.useRef(null);
   const finalRef = React.useRef(null);
   const toast = useToast();
   const addNote = async (event) => {
+    setLoading(true)
     event.preventDefault();
     const noteData = {
       title: event.target.title.value,
@@ -46,14 +50,17 @@ export default function Page() {
       const response = await fetch(endpoint, options);
       const result = await response.json();
       if (!response.ok) {
+        setLoading(false)
         toast({
           title: `unsuccess created`,
           status: "error",
           isClosable: true,
         });
       } else {
+        setLoading(false)
         console.log(result);
-        onClose()
+        mutate('/api/get_note')
+        onClose();
         toast({
           title: `success created`,
           status: "success",
@@ -61,7 +68,9 @@ export default function Page() {
         });
       }
     } catch (error) {
+      setLoading(false)
       toast({
+        
         title: `unsuccess created`,
         status: "error",
         isClosable: true,
@@ -102,11 +111,15 @@ export default function Page() {
                 </ModalBody>
 
                 <ModalFooter>
-                  <Button type="submit" colorScheme="blue" mr={3}
+                  <Button
                   
-                  loadingText="Loading"
-                  variant="outline"
-                  spinnerPlacement="start"
+                    type="submit"
+                    colorScheme="blue"
+                    mr={3}
+                    isLoading={is_Loading}
+                    loadingText="Adding"
+                    variant="outline"
+                    spinnerPlacement="start"
                   >
                     Add Note
                   </Button>
@@ -117,6 +130,7 @@ export default function Page() {
           </Modal>
         </Center>
       </Container>
+      <Notes></Notes>
     </VStack>
   );
 }
