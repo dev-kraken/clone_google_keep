@@ -31,7 +31,7 @@ import {
   Input,
   FormControl,
   FormLabel,
-  Textarea
+  Textarea,
 } from "@chakra-ui/react";
 import useSWR, { useSWRConfig } from "swr";
 import { DeleteIcon, EditIcon } from "@chakra-ui/icons";
@@ -42,8 +42,12 @@ export default function Notes() {
   const { mutate } = useSWRConfig();
   const [valueId, setValue] = useState("");
   const [is_Loading, setLoading] = useState(false);
-  const { isOpen :isOpenEdit, onOpen:onOpenEdit, onClose:onCloseEdit } = useDisclosure();
-  const { isOpen :isOpen, onOpen:onOpen, onClose:onClose } = useDisclosure();
+  const {
+    isOpen: isOpenEdit,
+    onOpen: onOpenEdit,
+    onClose: onCloseEdit,
+  } = useDisclosure();
+  const { isOpen: isOpen, onOpen: onOpen, onClose: onClose } = useDisclosure();
   const cancelRef = React.useRef();
   const fetcher = (...args) => fetch(...args).then((res) => res.json());
   const { data, error, isLoading } = useSWR(`/api/get_note`, fetcher);
@@ -52,20 +56,57 @@ export default function Notes() {
     return (
       <Container>
         <Center>
-        <Spinner color="red.500" />
+          <Spinner color="red.500" />
         </Center>
       </Container>
     );
 
   const deleteHandel = async (event) => {
-    setLoading(true)
+    setLoading(true);
     let id = event.target.value;
     await fetch(`/api/${id}`, {
       method: "DELETE",
     });
-    setLoading(false)
+    setLoading(false);
     onClose();
     mutate("/api/get_note");
+  };
+
+  const updateNote = async (event) => {
+    setLoading(true);
+    event.preventDefault();
+    const noteData = {
+      id: event.target.id.value,
+      title: event.target.title.value,
+      note: event.target.note.value,
+    };
+
+    console.log(noteData.id);
+    const JSONdata = JSON.stringify(noteData);
+    try {
+      const endpoint = `/api/${noteData.id}`;
+      const options = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSONdata,
+      };
+      const response = await fetch(endpoint, options);
+      const result = await response.json();
+      if (!response.ok) {
+        onCloseEdit()
+        setLoading(false);
+      }else {
+        setLoading(false)
+        mutate('/api/get_note')
+        onCloseEdit();
+      }
+    } catch (error) {
+      setLoading(false);
+      onCloseEdit()
+
+    }
   };
 
   return (
@@ -89,11 +130,13 @@ export default function Notes() {
                         </Badge>
                       </Flex>
                       <Flex gap="2">
-                        <EditIcon color="green.500"
-                        onClick={() => {
-                          onOpenEdit();
-                          setValue(`${notes.id}`);
-                        }} />
+                        <EditIcon
+                          color="green.500"
+                          onClick={() => {
+                            onOpenEdit();
+                            setValue(`${notes.id}`);
+                          }}
+                        />
                         <DeleteIcon
                           onClick={() => {
                             onOpen();
@@ -149,45 +192,42 @@ export default function Notes() {
         </AlertDialogOverlay>
       </AlertDialog>
 
+      <Modal isOpen={isOpenEdit} onClose={onCloseEdit}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Add Note</ModalHeader>
+          <ModalCloseButton />
+          <form onSubmit={updateNote}>
+            <ModalBody pb={6}>
+              <FormControl>
+                <FormLabel>Title</FormLabel>
+                <Input placeholder="Title" name="title" />
+                <Input hidden defaultValue={valueId} placeholder="id" name="id" />
+              </FormControl>
 
-      <Modal
-            isOpen={isOpenEdit}
-            onClose={onCloseEdit}
-          >
-            <ModalOverlay />
-            <ModalContent>
-              <ModalHeader>Add Note</ModalHeader>
-              <ModalCloseButton />
-              <form >
-                <ModalBody pb={6}>
-                  <FormControl>
-                    <FormLabel>Title</FormLabel>
-                    <Input placeholder="Title" name="title" />
-                  </FormControl>
+              <FormControl mt={4}>
+                <FormLabel>Note</FormLabel>
+                <Textarea placeholder="Note" name="note" />
+              </FormControl>
+            </ModalBody>
 
-                  <FormControl mt={4}>
-                    <FormLabel>Note</FormLabel>
-                    <Textarea placeholder="Note" name="note" />
-                  </FormControl>
-                </ModalBody>
-
-                <ModalFooter>
-                  <Button
-                    type="submit"
-                    colorScheme="blue"
-                    mr={3}
-                    isLoading={is_Loading}
-                    loadingText="Adding"
-                    variant="outline"
-                    spinnerPlacement="start"
-                  >
-                    Add Note
-                  </Button>
-                  <Button onClick={onCloseEdit}>Cancel</Button>
-                </ModalFooter>
-              </form>
-            </ModalContent>
-          </Modal>
+            <ModalFooter>
+              <Button
+                type="submit"
+                colorScheme="blue"
+                mr={3}
+                isLoading={is_Loading}
+                loadingText="Updating"
+                variant="outline"
+                spinnerPlacement="start"
+              >
+                Update Note
+              </Button>
+              <Button onClick={onCloseEdit}>Cancel</Button>
+            </ModalFooter>
+          </form>
+        </ModalContent>
+      </Modal>
     </Container>
   );
 }
