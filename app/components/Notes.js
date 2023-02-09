@@ -32,6 +32,7 @@ import {
   FormControl,
   FormLabel,
   Textarea,
+  SimpleGrid
 } from "@chakra-ui/react";
 import useSWR, { useSWRConfig } from "swr";
 import { DeleteIcon, EditIcon } from "@chakra-ui/icons";
@@ -111,9 +112,9 @@ export default function Notes() {
 
   return (
     <Container maxW="container.xl" mt="10">
-      <Grid templateColumns="repeat(5, 1fr)" gap={6}>
+      <SimpleGrid minChildWidth='120px' spacing='20px'>
         {data.map((notes) => (
-          <GridItem key={notes.id} w="100%" h="auto">
+          <Box key={notes.id} w="100%" h="auto">
             <Card>
               <CardBody>
                 <Box>
@@ -153,9 +154,9 @@ export default function Notes() {
                 </Box>
               </CardBody>
             </Card>
-          </GridItem>
+          </Box>
         ))}
-      </Grid>
+      </SimpleGrid>
 
       <AlertDialog
         isOpen={isOpen}
