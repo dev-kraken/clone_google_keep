@@ -112,7 +112,7 @@ export default function Notes() {
 
   return (
     <Container maxW="container.xl" mt="10">
-      <SimpleGrid minChildWidth='120px' spacing='20px'>
+      <SimpleGrid minChildWidth='200px' spacing='20px'>
         {data.map((notes) => (
           <Box key={notes.id} w="100%" h="auto">
             <Card>
